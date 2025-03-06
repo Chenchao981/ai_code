@@ -22,15 +22,14 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description='晶圆厂CP测试数据分析工具')
     
-    parser.add_argument('--data-dir', type=str, default='./data/data2/rawdata',
-                        help='数据目录路径 (默认: ./data/data2/rawdata)')
+    parser.add_argument('--data-dir', type=str, default='E:/data/data2/rawdata',
+                        help='数据目录路径 (默认: E:/data/data2/rawdata)')
     
     parser.add_argument('--output-dir', type=str, default='./output',
                         help='输出目录路径 (默认: ./output)')
     
     parser.add_argument('--params', type=str, nargs='+',
-                        default=["BVDSS1", "BVDSS2", "DELTABV", "IDSS1", "VTH", 
-                                "RDSON1", "VFSDS", "IGSS2", "IGSSR2", "IDSS2"],
+                        default=["BVDSS1"],  # 简化为只分析BVDSS1参数
                         help='要分析的参数列表')
     
     return parser.parse_args()

@@ -15,38 +15,46 @@ class CPDataAnalyzer:
         """
         self.df = dataframe
         self.limits = limits
-        self.target_params = ["BVDSS1", "BVDSS2", "DELTABV", "IDSS1", "VTH", 
-                             "RDSON1", "VFSDS", "IGSS2", "IGSSR2", "IDSS2"]
+        self.df_clean = None
+        self.target_params = ["BVDSS1"]  # 简化为只分析BVDSS1参数
     
     def clean_data(self):
         """
-        数据清洗：移除异常值、填充缺失值等
+        数据清洗
         
         Returns:
-            pd.DataFrame: 清洗后的数据框
+            DataFrame: 清洗后的数据
         """
+        if self.df is None or self.df.empty:
+            print("错误: 数据为空，无法进行清洗")
+            return None
+            
         # 复制数据，避免修改原始数据
         df_clean = self.df.copy()
         
-        # 移除全为NaN的行
-        df_clean = df_clean.dropna(how='all', subset=self.target_params)
-        
-        # 对每个参数进行清洗
+        # 处理特殊值
         for param in self.target_params:
             if param in df_clean.columns:
-                # 将极端异常值替换为NaN
-                if param in self.limits:
-                    upper = self.limits[param]['upper']
-                    lower = self.limits[param]['lower']
-                    
-                    # 如果上下限有效，则使用它们过滤数据
-                    if not np.isnan(upper) and not np.isnan(lower):
-                        # 允许一定的超出范围，设置为上下限的2倍
-                        df_clean.loc[df_clean[param] > upper * 2, param] = np.nan
-                        df_clean.loc[df_clean[param] < lower / 2, param] = np.nan
+                # 将字符串转换为数值类型，错误值设为NaN
+                df_clean[param] = pd.to_numeric(df_clean[param], errors='coerce')
                 
-                # 处理999.9等特殊值
-                df_clean.loc[df_clean[param] == 999.9, param] = np.nan
+                # 处理异常值
+                # 计算四分位数
+                q1 = df_clean[param].quantile(0.25)
+                q3 = df_clean[param].quantile(0.75)
+                iqr = q3 - q1
+                
+                # 定义异常值范围
+                lower_bound = q1 - 3 * iqr
+                upper_bound = q3 + 3 * iqr
+                
+                # 标记异常值
+                df_clean.loc[(df_clean[param] < lower_bound) | (df_clean[param] > upper_bound), f"{param}_outlier"] = True
+                
+                # 不移除异常值，只标记，以便在图表中显示
+        
+        # 保存清洗后的数据
+        self.df_clean = df_clean
         
         return df_clean
     

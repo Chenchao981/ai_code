@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>晶圆厂CP测试数据分析报告 - {{ param }}</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="static/js/script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>晶圆厂CP测试数据分析报告</h1>
+        
+        <div class="parameter-selector">
+            <label for="param-select">选择参数：</label>
+            <select id="param-select">
+                {% for p in params %}
+                <option value="{{ p }}" {% if p == param %}selected{% endif %}>{{ p }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <h2>参数：{{ param }}</h2>
+        
+        <div class="chart-container">
+            {{ chart_html|safe }}
+        </div>
+        
+        <div class="stats-container">
+            <h3>统计信息</h3>
+            <table class="stats-table">
+                <tr>
+                    <th>批次</th>
+                    <th>平均值</th>
+                    <th>标准差</th>
+                    <th>中位数</th>
+                    <th>最小值</th>
+                    <th>最大值</th>
+                    <th>数据点数</th>
+                </tr>
+                {% for lot, stat in stats.by_lot.items() %}
+                <tr>
+                    <td>{{ lot }}</td>
+                    <td class="blue-text">{{ "%.4f"|format(stat.mean) }}</td>
+                    <td class="brown-text">{{ "%.4f"|format(stat.std) }}</td>
+                    <td>{{ "%.4f"|format(stat.median) }}</td>
+                    <td>{{ "%.4f"|format(stat.min) }}</td>
+                    <td>{{ "%.4f"|format(stat.max) }}</td>
+                    <td>{{ stat.count }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td><strong>总体</strong></td>
+                    <td class="blue-text"><strong>{{ "%.4f"|format(stats.overall.mean) }}</strong></td>
+                    <td class="brown-text"><strong>{{ "%.4f"|format(stats.overall.std) }}</strong></td>
+                    <td><strong>{{ "%.4f"|format(stats.overall.median) }}</strong></td>
+                    <td><strong>{{ "%.4f"|format(stats.overall.min) }}</strong></td>
+                    <td><strong>{{ "%.4f"|format(stats.overall.max) }}</strong></td>
+                    <td><strong>{{ stats.overall.count }}</strong></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>生成时间：{{ timestamp }}</p>
+            <p>晶圆厂CP测试数据分析工具</p>
+        </div>
+    </div>
+</body>
+</html>

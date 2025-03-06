@@ -24,8 +24,9 @@ class CPLogParser:
             data_dir (str): 数据目录
         """
         self.data_dir = data_dir
-        self.target_params = ["BVDSS1", "BVDSS2", "DELTABV", "IDSS1", "VTH", 
-                             "RDSON1", "VFSDS", "IGSS2", "IGSSR2", "IDSS2"]
+        self.target_params = ["BVDSS1"]  # 简化为只分析BVDSS1参数
+        # self.target_params = ["BVDSS1", "BVDSS2", "DELTABV", "IDSS1", "VTH", 
+        #                      "RDSON1", "VFSDS", "IGSS2", "IGSSR2", "IDSS2"]
         
     def find_log_files(self):
         """

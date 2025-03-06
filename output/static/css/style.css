@@ -1,0 +1,145 @@
+/* 晶圆厂CP测试数据分析工具样式表 */
+
+/* 全局样式 */
+body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 标题样式 */
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+}
+
+h2 {
+    color: #2980b9;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: #3498db;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+/* 参数选择器 */
+.parameter-selector {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.parameter-selector select {
+    padding: 8px 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+/* 图表容器 */
+.chart-container {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 统计信息表格 */
+.stats-container {
+    margin: 30px 0;
+    overflow-x: auto;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.stats-table th, .stats-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.stats-table th {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+}
+
+.stats-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.stats-table tr:hover {
+    background-color: #e9f7fe;
+}
+
+/* 颜色文本 */
+.blue-text {
+    color: #3498db;
+    font-weight: bold;
+}
+
+.brown-text {
+    color: #d35400;
+    font-weight: bold;
+}
+
+/* 参数列表 */
+.param-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.param-list li {
+    margin: 10px 0;
+    padding: 10px 15px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.param-list li:hover {
+    background-color: #e9f7fe;
+    transform: translateX(5px);
+}
+
+.param-list a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+}
+
+/* 页脚 */
+.footer {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 14px;
+}
