@@ -76,6 +76,33 @@ class CPChartGenerator:
         # 创建图表
         fig = go.Figure()
         
+        # 创建蓝色标题背景
+        fig.add_shape(
+            type="rect",
+            x0=-0.5,
+            y0=y_max + (y_max-y_min)*0.02,
+            x1=len(wafers)-0.5,
+            y1=y_max + (y_max-y_min)*0.1,
+            line=dict(
+                color="blue",
+                width=1,
+            ),
+            fillcolor="blue",
+        )
+        
+        # 添加白色标题文字
+        fig.add_annotation(
+            x=0,
+            y=y_max + (y_max-y_min)*0.06,
+            text=f"<b>BVDSS1</b>",
+            showarrow=False,
+            font=dict(
+                color="white",
+                size=20
+            ),
+            xanchor="left"
+        )
+        
         # 添加箱型图
         fig.add_trace(go.Box(
             x=boxplot_data['x'],
@@ -86,7 +113,8 @@ class CPChartGenerator:
             pointpos=0,  # 点的位置
             marker=dict(
                 color='brown',
-                size=3
+                size=3,
+                opacity=0.6
             ),
             line=dict(
                 color='blue',
@@ -94,14 +122,17 @@ class CPChartGenerator:
             ),
             fillcolor='rgba(0, 0, 255, 0.1)',
             whiskerwidth=0.6,
-            boxmean='sd',  # 显示均值和标准差
-            showlegend=True
+            boxmean=True,  # 显示均值
+            showlegend=False
         ))
         
         # 计算每个晶圆片的平均值，用于添加平均值标记
         wafer_means = {}
+        wafer_stds = {}
         for wafer in wafers:
-            wafer_means[wafer] = stats['by_lot'][wafer]['mean'] if wafer in stats['by_lot'] else None
+            if wafer in stats['by_lot']:
+                wafer_means[wafer] = stats['by_lot'][wafer]['mean']
+                wafer_stds[wafer] = stats['by_lot'][wafer]['std']
         
         # 添加平均值标记
         avg_x = []
@@ -126,33 +157,39 @@ class CPChartGenerator:
                     width=1
                 )
             ),
-            showlegend=True
+            showlegend=False
         ))
         
         # 设置图表布局
         fig.update_layout(
             title=dict(
-                text=f"Box Plot<br><span style='font-size:14px;'>VALUE<br>PARAMETER:{param}</span>",
+                text=f"Box Plot<br>VALUE<br>PARAMETER:3.BVDSS",
                 x=0.5,
                 y=0.95,
                 xanchor='center',
-                yanchor='top'
+                yanchor='top',
+                font=dict(size=14)
             ),
             xaxis=dict(
-                title='WAFER',
+                title='',  # 不显示X轴标题
                 tickmode='array',
                 tickvals=list(range(len(wafers))),
-                ticktext=wafers
+                ticktext=wafers,
+                gridcolor='rgba(200, 200, 200, 0.2)',  # 淡色网格
+                showgrid=True,
+                zeroline=False
             ),
             yaxis=dict(
                 title='VALUE',
                 zeroline=False,
-                range=[y_min, y_max]  # 设置Y轴范围
+                range=[y_min, y_max],  # 设置Y轴范围
+                gridcolor='rgba(200, 200, 200, 0.2)',  # 淡色网格
+                showgrid=True
             ),
             legend=dict(
                 orientation='h',
                 yanchor='bottom',
-                y=-0.3,
+                y=-0.35,
                 xanchor='center',
                 x=0.5
             ),
@@ -165,37 +202,11 @@ class CPChartGenerator:
             height=800,
             width=1200,
             hovermode='closest',
-            template='plotly_white'
+            template='plotly_white',
+            plot_bgcolor='rgba(240, 250, 255, 0.5)'  # 浅蓝色背景
         )
         
         # 如果有限制，则添加水平线
-        if limits.get('upper') is not None:
-            fig.add_shape(
-                type="line",
-                x0=-0.5,
-                y0=limits['upper'],
-                x1=len(wafers) - 0.5,
-                y1=limits['upper'],
-                line=dict(
-                    color="red",
-                    width=2,
-                    dash="dash",
-                ),
-                name="USL"
-            )
-            # 添加USL标签
-            fig.add_annotation(
-                x=-0.4,
-                y=limits['upper'],
-                text=f"USL:{limits['upper']}",
-                showarrow=False,
-                font=dict(
-                    color="red",
-                    size=12
-                ),
-                xanchor="left"
-            )
-            
         if limits.get('lower') is not None:
             fig.add_shape(
                 type="line",
@@ -223,27 +234,11 @@ class CPChartGenerator:
                 xanchor="left"
             )
         
-        # 添加统计信息表格
-        self._add_stats_table(fig, param, stats)
+        # 不再添加右上角统计信息表格
+        # self._add_stats_table(fig, param, stats)
         
         # 添加数据表格，显示每个Wafer的平均值和标准差
         self._add_wafer_stats_table(fig, param, stats)
-        
-        # 添加批次信息
-        lot_number = self.analyzer.df_clean['Lot'].iloc[0] if not self.analyzer.df_clean.empty else "Unknown"
-        fig.add_annotation(
-            x=0.5,
-            y=-0.25,
-            xref="paper",
-            yref="paper",
-            text=f"{lot_number}",
-            showarrow=False,
-            font=dict(
-                color="black",
-                size=14
-            ),
-            align="center"
-        )
         
         # 保存图表
         self.charts[param] = fig
@@ -315,7 +310,7 @@ class CPChartGenerator:
         # 获取所有晶圆片并排序
         wafers = sorted(stats['by_lot'].keys())
         
-        # 提取每个晶圆片的平均值和标准差
+        # 提取每个晶圆片的平均值和标准差，保留小数点后一位
         avg_values = []
         std_values = []
         
@@ -324,10 +319,15 @@ class CPChartGenerator:
             avg_values.append(f"{wafer_stats['mean']:.1f}")
             std_values.append(f"{wafer_stats['std']:.2f}")
         
-        # 创建表格数据
-        table_headers = ["Average"] + wafers
+        # 获取批次号
+        lot_number = ""
+        if not self.analyzer.df_clean.empty:
+            lot_number = self.analyzer.df_clean['Lot'].iloc[0]
+        
+        # 创建表格数据 - 4行
+        table_headers = [""] + wafers
         table_rows = [
-            avg_values,
+            ["Average"] + avg_values,
             ["StdDev"] + std_values,
             ["WAFER"] + wafers,
             ["LOT"] + [""] * len(wafers)
@@ -335,29 +335,109 @@ class CPChartGenerator:
         
         # 添加表格到图表
         fig.add_trace(go.Table(
-            domain=dict(x=[0.0, 1.0], y=[0.0, 0.15]),
+            domain=dict(x=[0.0, 1.0], y=[0.0, 0.12]),
             header=dict(
-                values=table_headers,
-                line_color='darkslategray',
+                values=[""] * (len(wafers) + 1),  # 空白表头
+                line_color='white',
                 fill_color='white',
-                align='center',
-                font=dict(color='black', size=10)
+                height=0
             ),
             cells=dict(
                 values=table_rows,
                 line_color='darkslategray',
                 fill_color=[
-                    ['white', 'white', 'white', 'white'],  # 行颜色
-                    ['lightblue'] * len(wafers),  # 平均值颜色
-                    ['brown'] * len(wafers),  # 标准差颜色
-                    ['white'] * len(wafers),  # WAFER颜色
-                    ['white'] * len(wafers)   # LOT颜色
+                    'white',  # 第一列颜色
+                    ['white'] + ['white'] * len(wafers),  # 平均值那一行
+                    ['white'] + ['white'] * len(wafers),  # 标准差那一行
+                    ['white'] + ['white'] * len(wafers),  # WAFER那一行
+                    ['white'] + ['white'] * len(wafers)   # LOT那一行
                 ],
-                align='center',
+                align=['center'] * (len(wafers) + 1),
                 font=dict(
-                    color=['black', 'blue', 'brown', 'black', 'black'],
-                    size=10
+                    color=[
+                        'black',  # 第一列字体颜色
+                        ['black'] + ['blue'] * len(wafers),   # 平均值那一行字体颜色
+                        ['black'] + ['brown'] * len(wafers),  # 标准差那一行字体颜色
+                        ['black'] * (len(wafers) + 1),        # WAFER那一行字体颜色
+                        ['black'] * (len(wafers) + 1)         # LOT那一行字体颜色
+                    ],
+                    size=11
                 ),
                 height=25
             )
         ))
+        
+        # 添加批次信息在表格下方居中
+        fig.add_annotation(
+            x=0.5,
+            y=-0.29,
+            xref="paper",
+            yref="paper",
+            text=f"{lot_number}",
+            showarrow=False,
+            font=dict(
+                color="black",
+                size=12
+            ),
+            align="center"
+        )
+        
+        # 添加图例
+        fig.add_shape(
+            type="rect",
+            x0=0.375,
+            y0=-0.4,
+            x1=0.625,
+            y1=-0.35,
+            xref="paper",
+            yref="paper",
+            line=dict(color="gray", width=1),
+            fillcolor="white"
+        )
+        
+        # 添加蓝色方块和文字"VALUE"
+        fig.add_shape(
+            type="rect",
+            x0=0.395,
+            y0=-0.385,
+            x1=0.425,
+            y1=-0.365,
+            xref="paper",
+            yref="paper",
+            line=dict(color="blue", width=1),
+            fillcolor="blue"
+        )
+        
+        fig.add_annotation(
+            x=0.465,
+            y=-0.375,
+            xref="paper",
+            yref="paper",
+            text="VALUE",
+            showarrow=False,
+            font=dict(color="black", size=10),
+            align="left"
+        )
+        
+        # 添加红色三角形和文字"Average"
+        fig.add_annotation(
+            x=0.525,
+            y=-0.375,
+            xref="paper",
+            yref="paper",
+            text="▲",
+            showarrow=False,
+            font=dict(color="red", size=14),
+            align="center"
+        )
+        
+        fig.add_annotation(
+            x=0.575,
+            y=-0.375,
+            xref="paper",
+            yref="paper",
+            text="Average",
+            showarrow=False,
+            font=dict(color="black", size=10),
+            align="left"
+        )
