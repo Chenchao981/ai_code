@@ -25,7 +25,8 @@ class CPHTMLReport:
         """
         self.chart_generator = chart_generator
         self.analyzer = chart_generator.analyzer
-        self.output_dir = chart_generator.output_dir
+        # 默认输出目录
+        self.output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
         self.template_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'templates')
         self.static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static')
         

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-基于提示词“rawdata提示词.md”生成的代码逻辑
+基于提示词"rawdata提示词.md"生成的代码逻辑
 晶圆厂CP测试数据分析工具主程序
 """
 
@@ -23,15 +23,34 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description='晶圆厂CP测试数据分析工具')
     
-    parser.add_argument('--data-dir', type=str, default='E:/data/data2/rawdata',
-                        help='数据目录路径 (默认: E:/data/data2/rawdata)')
+    # 获取当前脚本所在目录的上两级目录下的data/data2/rawdata路径
+    default_data_dir = os.path.abspath(os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'data', 'data2', 'rawdata'
+    ))
     
-    parser.add_argument('--output-dir', type=str, default='./output',
-                        help='输出目录路径 (默认: ./output)')
+    # 如果默认目录不存在，尝试使用cp_analyzer_project/data/data2/rawdata
+    if not os.path.exists(default_data_dir):
+        default_data_dir = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'data', 'data2', 'rawdata'
+        ))
     
-    parser.add_argument('--params', type=str, nargs='+',
-                        default=["BVDSS1"],  # 简化为只分析BVDSS1参数
-                        help='要分析的参数列表')
+    parser.add_argument('-i', '--input-dir', type=str, default=default_data_dir,
+                        help='数据目录路径 (默认: 项目内的data/data2/rawdata)')
+    
+    # 获取当前脚本所在目录的output路径
+    default_output_dir = os.path.abspath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'output'
+    ))
+    
+    parser.add_argument('-o', '--output-dir', type=str, default=default_output_dir,
+                        help='输出目录路径 (默认: scripts/output)')
+    
+    parser.add_argument('-p', '--params', type=str, nargs='+',
+                        default=["BVDSS1"],
+                        help='要分析的参数列表 (默认: BVDSS1)')
     
     return parser.parse_args()
 
@@ -43,7 +62,7 @@ def main():
     args = parse_args()
     
     # 获取数据目录的绝对路径
-    data_dir = os.path.abspath(args.data_dir)
+    data_dir = os.path.abspath(args.input_dir)
     
     # 获取输出目录的绝对路径
     output_dir = os.path.abspath(args.output_dir)
@@ -72,8 +91,7 @@ def main():
     
     # 初始化数据分析器
     print("\n步骤2: 数据清洗与分析...")
-    analyzer = CPDataAnalyzer(df, limits)
-    analyzer.target_params = args.params
+    analyzer = CPDataAnalyzer(df, args.params, limits)
     
     # 数据清洗
     df_clean = analyzer.clean_data()
@@ -87,11 +105,15 @@ def main():
     # 初始化图表生成器
     print("\n步骤3: 生成图表...")
     chart_generator = CPChartGenerator(analyzer)
-    chart_generator.output_dir = output_dir
     
     # 初始化HTML报告生成器
     print("\n步骤4: 生成HTML报告...")
     report_generator = CPHTMLReport(chart_generator)
+    report_generator.output_dir = output_dir
+    report_generator.template_dir = os.path.abspath(os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'templates'
+    ))
     
     # 生成所有报告
     index_path = report_generator.generate_all_reports()
